@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta
+from time import sleep
 import boto3
 
 from config_reader import read_config
 
 logs_client = boto3.client('logs')
 configs = read_config()
-print(configs)
 
-end_date = round((datetime.utcnow() - timedelta(seconds=1)).timestamp())
-start_date = round((datetime.utcnow() - timedelta(hours=float(configs.window))).timestamp())
+# it looks like in the background, the library will automaticaly convert localtime into UTC
+# therefore this should be in local time. if we set as utc time then it will be reduced again by timezone delta.
+end_date = round((datetime.now() - timedelta(seconds=1)).timestamp())
+start_date = round((datetime.now() - timedelta(hours=float(configs.window))).timestamp())
 
 query = logs_client.start_query(
     logGroupName=configs.log_group_name,
@@ -19,5 +21,10 @@ query = logs_client.start_query(
 
 query_id = query['queryId']
 
-resp = logs_client.get_query_results(queryId=query_id)
+while True:
+    resp = logs_client.get_query_results(queryId=query_id)
+    if resp['status'] in ['Complete', 'Unknown']:
+        break
+    sleep(10)
+
 print(resp['results'])

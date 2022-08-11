@@ -1,4 +1,4 @@
 log_group_name=
-window=8
+window=
 period=
 query_string=

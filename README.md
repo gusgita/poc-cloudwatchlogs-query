@@ -8,5 +8,5 @@ To setup:
 
 To run:
 ```
-python index.py
+py index.py
 ```
