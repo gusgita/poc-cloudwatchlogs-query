@@ -3,6 +3,7 @@ from time import sleep
 import boto3
 
 from config_reader import read_config
+from query_executor import execute_query
 
 logs_client = boto3.client('logs')
 configs = read_config()
@@ -12,19 +13,4 @@ configs = read_config()
 end_date = round((datetime.now() - timedelta(seconds=1)).timestamp())
 start_date = round((datetime.now() - timedelta(hours=float(configs.window))).timestamp())
 
-query = logs_client.start_query(
-    logGroupName=configs.log_group_name,
-    startTime=start_date,
-    endTime=end_date,
-    queryString=configs.query_string
-)
-
-query_id = query['queryId']
-
-while True:
-    resp = logs_client.get_query_results(queryId=query_id)
-    if resp['status'] in ['Complete', 'Unknown']:
-        break
-    sleep(10)
-
-print(resp['results'])
+print(execute_query(logs_client, start_date, end_date, configs.log_group_name, configs.query_string))
